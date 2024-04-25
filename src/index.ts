@@ -9,12 +9,14 @@ import typeDefs from "./graphql/typeDefs";
 import resolvers from "./graphql/resolvers";
 
 import { makeExecutableSchema } from "@graphql-tools/schema";
+import * as dotenv from 'dotenv';
 
 interface MyContext {
   token?: String;
 }
 
 async function main() {
+  dotenv.config();
   const app = express();
   const httpServer = http.createServer(app);
 
@@ -28,11 +30,17 @@ async function main() {
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
   });
 
+  const corsOptions = {
+    origin: process.env.CLIENT_ORIGIN,
+    credentials: true,
+
+  }
+
   await server.start();
 
   app.use(
     "/graphql",
-    cors<cors.CorsRequest>(),
+    cors<cors.CorsRequest>(corsOptions),
     express.json(),
     expressMiddleware(server, {
       context: async ({ req }) => ({ token: req.headers.token }),
@@ -56,3 +64,4 @@ main().catch((err) => console.log(err));
 // npm i lodash.merge
 // npm i @graphql-tools/schema
 // npm i --save-dev nodemon  
+// npm i dotenv
